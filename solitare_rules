@@ -1,0 +1,31 @@
+13 cards * 4 suits
+7 piles
+1-7
+4 collection bins
+
+potential data types: ** lots of stacks, top, pop, put
+- 'stock' pile
+- 'collection' pile
+- 'in-play' pile
+- deck
+- cards
+
+scroll deck
+pick 3 cards, may look at 3 cards but only the top card can be used
+use the top card to allow access to the next card
+
+cards can either be placed onto other stacks or in collection bin
+
+when placing card onto something, old top card must be alternating color and one value less than placing card
+
+all cards in deck must be in play
+
+Coding step 1 - Building app functionality
+- Load in all cards onto a screen (hidden/not?)
+- Be able to move cards from 'in-play' piles freely
+- Collection piles are able to be populated
+- Stock pile able to be drawn from 3 at a time
+- Cards from stock pile able to be put in other piles
+- Cards can not be placed in stock pile
+
+

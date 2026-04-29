@@ -1,0 +1,15 @@
+# This class is responsible for establishing the bounds of the elements on the board
+# This includes keeping track dynamically of how large the game piles get
+
+# The 'Board' is a map that the manager uses to decide what to do with cards
+from SolitaireBoard import *
+
+class BoardManager:
+    def __init__(self, root):
+        self.root = root
+        width = self.root.winfo_screenwidth()
+        height = self.root.winfo_screenheight()
+
+        print(width)
+        print(height)
+        self.board = SolitaireBoard(self.root)
