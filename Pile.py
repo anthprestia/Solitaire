@@ -40,3 +40,7 @@ class Pile:
     def pop(self):
         # Assert pile not empty?
         self.pile.pop()
+
+    # get top left coordinate position of the pile
+    def get_coordinate(self):
+        return [self.w_offset, self.h_offset]

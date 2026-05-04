@@ -17,64 +17,49 @@ class Card:
 
         self.name = f"{self.rank}_of_{self.suit}"
 
-        self.draggable = False
-        self.drag_data = {"x":0,"y":0}
-
         # create card object and maybe disable the visual until deal
-        self.id = self.board.create_rectangle(0, 0, Config.card_width, Config.card_height, fill=self.color, state='hidden')
+        self.id = self.board.create_rectangle(0, 0, Config.card_width, Config.card_height, fill=self.color)
+
+        self.draggable = False
+        self.start_position = {"x":0,"y":0}
+        self.drag_position = {"x":0,"y":0}
+
+        self.toggle_drag()
 
     # Overwrite print function to show Suit/Rank
     def __str__(self):
         return self.name
 
-    def place(self, x, y):
-        self.card.place(x=x,y=y)
-
     def toggle_drag(self, e=None):
         if not self.draggable:
             # establish events for grab and drag
-            self.card.bind("<Button-1>", self.on_grab)
-            self.card.bind("<B1-Motion>", self.on_drag)
-            self.card.bind("<ButtonRelease>", self.on_drop)
+            self.board.tag_bind(self.id, "<Button-1>", self.on_grab)
+            self.board.tag_bind(self.id, "<B1-Motion>", self.on_drag)
+            self.board.tag_bind(self.id, "<ButtonRelease-1>", self.on_drop)
             self.draggable = True
         else:
-            self.card.unbind("<Button-1>")
-            self.card.unbind("<B1-Motion>")
-            self.card.unbind("<ButtonRelease>")
+            self.board.tag_unbind(self.id, "<Button-1>")
+            self.board.tag_unbind(self.id, "<B1-Motion>")
+            self.board.tag_unbind(self.id, "<ButtonRelease-1>")
             self.draggable = False
 
     def on_grab(self, event):
-        self.drag_data = {"x":event.x,"y":event.y}
-        self.card.lift()
+        self.drag_position = {"x":event.x,"y":event.y}
+        self.board.tag_raise(self.id)
 
     def on_drag(self, event):
-        widget = event.widget
-        x = widget.winfo_x() - self.drag_data["x"] + event.x
-        y = widget.winfo_y() - self.drag_data["y"] + event.y
-        widget.place(x=x, y=y)
-
-        #check what elements, if any, we are hovering over
-        # sooooo that means pulling the board element from the event and then checking if at position theres another element?
-        # once we find the element we send an event directly to it?
+        dx = event.x - self.drag_position["x"]
+        dy = event.y - self.drag_position["y"]
+        self.drag_position = {"x":event.x,"y":event.y}
+        self.board.move(self.id, dx,dy)
 
     def on_drop(self, event):
-        self.get_child_at(event)
-        print("DROP EVENT: " + str(event))
-        print("    " + str(event.widget))
-        print("    ")
-
-
-    def get_child_at(self, event):
-        name = event.widget.winfo_name()
-        cords = self.standardize_event_cords(event)
-        print(name + str(cords['x']) + str(cords['y']))
-        # now
-
-    def standardize_event_cords(self, event):
-        widget = event.widget
-        # STANDARDIZE TO PARENT CORDS, otherwise event are widget specific cords
-        return {'x': widget.winfo_x() + event.x, 'y': widget.winfo_y() + event.y}
-
+        # deals with on drop event of card
+        # ask board if we've dropped over a pile
+        isPile = self.SolitaireBoard.is_pile(event)
+        if isPile:
+            self.start_position = {"x":isPile[0],"y":isPile[1]}
+        self.board.moveto(self.id, self.start_position['x'], self.start_position['y'])
 
 
 class Deck:

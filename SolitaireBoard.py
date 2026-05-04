@@ -22,7 +22,8 @@ class SolitaireBoard:
 
         self.configureGameBoard()
 
-        #deck = Deck(self.board)
+    def get_board(self):
+        return self.board
 
     def configureGameBoard(self):
         # Build the game board
@@ -62,32 +63,29 @@ class SolitaireBoard:
             pile = Pile(self, x_cord, y_cord, 'tableu'+str(p))
             self.pile_list[pile.get_id()] = pile
 
+
+    #
+    def is_pile(self, event):
+        object_list = self.board.find_overlapping(event.x, event.y,
+                                                  event.x, event.y)
+
+        if (len(object_list) > 0) and self.pile_list.__contains__(object_list[0]):
+            pile = self.pile_list.get(object_list[0])
+            return pile.get_coordinate()
+        else:
+            return False
+
+
+
     def under(self, event):
         print(str(event))
         #what pile, if any, was clicked on?
-        # get the objects at point (e.x,e.y), sorted by lowest to highest (number-wise or focus? idk)
+        # get the objects at point (e.x,e.y), sorted by lowest to highest based on focus. basically a 3rd dimension
         object_list = self.board.find_overlapping(event.x, event.y,
                                                   event.x, event.y,)
+        print(str(object_list))
 
         if (len(object_list) > 0) and self.pile_list.__contains__(object_list[0]):
             print(self.pile_list.get(object_list[0]).get_name())
         else:
             print("NO PILE")
-
-    def on_drag(self, event):
-        widget = event.widget
-        x = widget.winfo_x() - self.drag_data["x"] + event.x
-        y = widget.winfo_y() - self.drag_data["y"] + event.y
-        widget.place(x=x, y=y)
-
-    def get_board(self):
-        return self.board
-
-    def refresh_sizeing(self):
-        # Math for dynamic sizing:
-        # Piles should be the same size as cards. Cards should be ~10% of total canvas width
-        # Outer padding should each be about 5%
-        # Inner padding should each be about 3-4%
-        # Height can be negotiable depending on how we handle going off screen.
-        # Card ratio should be about w:h; 1.2 -> 1.5
-        return True
