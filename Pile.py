@@ -1,11 +1,31 @@
 from tkinter import *
 from Util import *
+from Config import *
 
+# A Pile is a Stack of Cards
 class Pile:
-    def __init__(self, board):
-        self.board = board
+    def __init__(self, board, w_offset, h_offset, name=''):
+        self.SolitaireBoard = board
+        self.board = board.get_board()
+        self.name = name
+        # also x,y on canvas
+        self.w_offset = w_offset
+        self.h_offset = h_offset
+        self.height = Config.card_height
+        self.width = Config.card_width
+        # Create rectangle element on the screen and store its
+        self.id = self.board.create_rectangle(self.w_offset, self.h_offset,
+                                              self.w_offset + self.width, self.h_offset + self.height,
+                                              fill='grey')
+
+        # Stack of cards
         self.pile = []
 
+    def get_id(self):
+        return self.id
+
+    def get_name(self):
+        return self.name
 
     def size(self):
         return len(self.pile)
@@ -20,29 +40,3 @@ class Pile:
     def pop(self):
         # Assert pile not empty?
         self.pile.pop()
-
-    def place_anchor(self):
-        self.anchor = Label(self.board, name="anchor", text="Anchor", width=10, height=10,bg='grey')
-        self.anchor.place(x=500, y=100)
-        self.anchor.bind("<Enter>", self.hover)
-        self.anchor.bind("<Leave>", self.unhover)
-
-
-    def hover(self, event):
-        self.get_child_at(event)
-        print("Anchor:" + str(event))
-
-    def get_child_at(self, event):
-        name = event.widget.winfo_name()
-        cords = Util.standardize_event_coords(event)
-        print(name + str(cords['x']) + str(cords['y']))
-        # now get the children
-
-        children = self.board.winfo_children()
-
-        self.board.master.update_idletasks()
-        children = self.board.winfo_containing(cords['x'], cords['y'])
-        print(children)
-
-    def unhover(self, event):
-        print("Anchor:" + str(event))

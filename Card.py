@@ -1,9 +1,12 @@
 import random
 from tkinter import *
+from Config import *
+
 
 class Card:
     def __init__(self, board, suit, rank):
-        self.board = board
+        self.SolitaireBoard = board
+        self.board = self.SolitaireBoard.get_board()
 
         self.suit = suit
         self.rank = rank
@@ -13,12 +16,12 @@ class Card:
             self.color = "black"
 
         self.name = f"{self.rank}_of_{self.suit}"
-        self.card = Label(board, name=self.name, state='disabled', width=0, height=0, bg=self.color)
+
         self.draggable = False
         self.drag_data = {"x":0,"y":0}
 
-        self.card.bind("<Double-Button-1>", self.toggle_drag)
-        self.toggle_drag()
+        # create card object and maybe disable the visual until deal
+        self.id = self.board.create_rectangle(0, 0, Config.card_width, Config.card_height, fill=self.color, state='hidden')
 
     # Overwrite print function to show Suit/Rank
     def __str__(self):
@@ -54,14 +57,8 @@ class Card:
         # sooooo that means pulling the board element from the event and then checking if at position theres another element?
         # once we find the element we send an event directly to it?
 
-
-
-
     def on_drop(self, event):
         self.get_child_at(event)
-
-
-
         print("DROP EVENT: " + str(event))
         print("    " + str(event.widget))
         print("    ")
@@ -87,8 +84,7 @@ class Deck:
         self.suits = ["hearts", "clubs", "spades", "diamonds"]
         self.ranks = list(range(1,14))
 
-        self.deck2()
-        self.deal()
+        self.deckT()
 
 
     def deck2(self):
@@ -102,11 +98,14 @@ class Deck:
 
         self.shuffle_deck()
 
+    def deckT(self):
+        self.deck.append(Card(self.board, self.suits[0], self.ranks[0]))
+
 
     # TODO - Deal cards piles
     def deal(self):
         self.deck[0].place(x=10,y=10)
-        self.deck[1].place(x=100,y=80)
+        #self.deck[1].place(x=100,y=80)
 
     def shuffle_deck(self):
         print("Shuffling deck...")
