@@ -17,13 +17,3 @@ class BoardManager:
 
         # board created
         self.board = SolitaireBoard(self.gameframe)
-
-        # create a deck
-        self.deck = Deck(self.board)
-
-        # deal the cards from the deck to the board
-
-
-# Deal the cards
-    def deal_deck(self):
-        return True

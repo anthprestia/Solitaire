@@ -7,6 +7,8 @@ class Config:
 
     card_width = 100
     card_height = 150
+    tableu_window = card_height / 6
+    tableu_shift = card_height - tableu_window
 
     # pile_spacing perhaps
     # available_space = window_width - (7*card_width)

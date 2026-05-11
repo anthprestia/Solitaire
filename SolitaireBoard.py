@@ -17,33 +17,33 @@ class SolitaireBoard:
 
         self.board.bind('<1>', self.under)
 
-        # dict of piles on the board KEY = Canvas ObjectId
+        # dict of piles on the board KEY = Canvas ObjectId or Pile Name
         self.pile_list = {}
 
         self.configureGameBoard()
+        self.deal_game()
+        #self.deck = Deck(self)
+
+
 
     def get_board(self):
         return self.board
 
     def configureGameBoard(self):
         # Build the game board
-        # define the bounds of the game
-        # - how big are cards
-        # - Reserve space for different piles
-        #   - Collection
-        #   - Stock
-        #   - Drawn
 
         # top row
         stock_x = Config.outer_padding
         stock_y = Config.outer_padding
         stock = Pile(self, stock_x, stock_y, 'stock')
         self.pile_list[stock.get_id()] = stock
+        self.pile_list[stock.get_name()] = stock
 
         waste_x = stock_x + Config.card_width + Config.inner_padding
         waste_y = Config.outer_padding
         waste = Pile(self, waste_x, waste_y, 'waste')
         self.pile_list[waste.get_id()] = waste
+        self.pile_list[waste.get_name()] = waste
 
         w = self.board.winfo_width()
 
@@ -54,6 +54,7 @@ class SolitaireBoard:
 
             pile = Pile(self, x_cord, y_cord, 'foundation'+str(f - 5))
             self.pile_list[pile.get_id()] = pile
+            self.pile_list[pile.get_name()] = pile
 
         # Setup tableu piles
         for p in range(1, 8):
@@ -62,21 +63,151 @@ class SolitaireBoard:
 
             pile = Pile(self, x_cord, y_cord, 'tableu'+str(p))
             self.pile_list[pile.get_id()] = pile
+            self.pile_list[pile.get_name()] = pile
+
+    # Deal the deck of cards
+    def deal_game(self):
+
+        d = Deck(self)
+        d.shuffle_deck()
+        cards = d.get_cards()
+
+        dealt = 0
+        # d = card depth (1 for first card, 2 for 2nd card, etc)
+        for d in range (1,8):
+            # t = tableu number
+            for t in range (1,8):
+                # Solitaire dealing rules creates a triangle
+                if t >= d:
+                    # get the pile by its name
+                    pname = 'tableu'+str(t)
+                    pile = self.pile_list.get(pname)
+                    # get a card and add it to the pile.
+                    card = cards[dealt]
+                    pile.deal(card)
+                    dealt += 1
+
+        """
+        d = 1
+        t = 1   
+        for card in cards:
+            if t >= d:
+                # get the pile by its name
+                pname = 'tableu'+str('t')
+                pile = self.pile_list.get(pname)
+                # get a card and add it to the pile
+                pile.add(card)
+        """
 
 
-    #
-    def is_pile(self, event):
-        object_list = self.board.find_overlapping(event.x, event.y,
-                                                  event.x, event.y)
+    def add_card_to_pile(self, card, pile):
+        return
+
+
+    # function that is called from within a Card to ask the board to handle a card drop event
+    # make sure its valid (isPile) + passes solitaire rules that have not been implemented yet
+    # add to pile, observe it grows, then fix card placements
+    def is_valid_move(self, event, card):
+
+        # if drop on a pile
+        #   get the name of that pile
+        #   if name NOT tableu or foundation
+        #       return False
+        #   else
+        #       check with that pile to see if the pile can accept this card validly
+        #       if pile can accept
+        #           add card to pile
+        #
+
+
+        # Pile class for the pile if it exists
+        pile = self.is_pile_at(event.x,event.y)
+
+        if pile:
+            pname = pile.get_name()
+            isValid = False
+            # check if the move is valid;
+            # only 2 types of piles can accept a valid move
+            if 'tableu' in pname:
+                if self.is_valid_tableu_move(pile, card):
+                    # do the move
+                    self.valid_tableu_move(pile, card)
+                    return True
+            elif 'foundation' in pname:
+                if self.is_valid_foundation_move(pile, card):
+                    return True
+
+            #pile.add(card)
+            #self.board.moveto(card.get_id(), event.x, event.y)
+        return False
+
+    # function for handling tableu drop rules
+    # returns boolean
+    def is_valid_tableu_move(self, pile, card):
+        # check the top card of the pile
+        top = pile.top()
+        # if the card is the opposite color as the top
+        #   return True
+        if top:
+            isColor = top.get_color() != card.get_color()
+            if isColor:
+                return True
+
+        return False
+
+    def valid_tableu_move(self, pile, card):
+        # remove the card from its current pile
+        # add the card to its new pile
+
+        # remove the card from current pile
+        prev_pname = card.get_pname()
+        # card's prev Pile instance
+        prev_pile = self.pile_list.get(prev_pname)
+
+        # chain of cards to move (all cards under the top most card grabbed will have to move)
+        # chain = [card, .. , bottom of chain]
+        chain = prev_pile.grab(card)
+
+        for p in chain:
+            pile.add(p)
+
+
+        return True
+
+
+    # function for handling foundation moves
+    # returns boolean
+    def is_valid_foundation_move(self, pile, card):
+        # check the top card of the pile
+        top = pile.top()
+        # if the card is the same color as the top then
+        # return True
+
+        if top:
+            isColor = top.get_color() == card.get_color()
+            if isColor:
+                return True
+
+        return False
+
+    # determines if an event happened over a pile
+    # if True, return the Pile
+    # if False, return False
+    def is_pile_at(self, x, y):
+        object_list = self.board.find_overlapping(x, y,
+                                                  x, y)
 
         if (len(object_list) > 0) and self.pile_list.__contains__(object_list[0]):
-            pile = self.pile_list.get(object_list[0])
-            return pile.get_coordinate()
+            return self.pile_list.get(object_list[0])
         else:
             return False
 
 
 
+
+
+
+    # testing function
     def under(self, event):
         print(str(event))
         #what pile, if any, was clicked on?
