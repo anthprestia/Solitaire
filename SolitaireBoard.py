@@ -87,18 +87,6 @@ class SolitaireBoard:
                     pile.deal(card)
                     dealt += 1
 
-        """
-        d = 1
-        t = 1   
-        for card in cards:
-            if t >= d:
-                # get the pile by its name
-                pname = 'tableu'+str('t')
-                pile = self.pile_list.get(pname)
-                # get a card and add it to the pile
-                pile.add(card)
-        """
-
 
     def add_card_to_pile(self, card, pile):
         return
@@ -166,11 +154,10 @@ class SolitaireBoard:
 
         # chain of cards to move (all cards under the top most card grabbed will have to move)
         # chain = [card, .. , bottom of chain]
-        chain = prev_pile.grab(card)
+        chain = prev_pile.split_chain(card)
 
-        for p in chain:
-            pile.add(p)
-
+        for c in chain:
+            pile.add(c)
 
         return True
 
@@ -202,9 +189,29 @@ class SolitaireBoard:
         else:
             return False
 
+    def card_chain_dragging(self, card, event):
+        pname = card.get_pname()
+        pile = self.pile_list.get(pname)
+        chain = pile.get_chain(card)
+        for card in chain:
+            cid = card.get_id()
+            dp = card.get_drag_position()
+            dx = event.x - dp["x"]
+            dy = event.y - dp["y"]
+            card.set_drag_position({"x": event.x, "y": event.y})
+            self.board.move(cid, dx, dy)
+            self.board.tag_raise(cid)
 
 
+        # board needs to update the cards at their new positions starting with 0
+        # and offset with window on the y
 
+    def card_chain_grabbing(self, card, event):
+        pname = card.get_pname()
+        pile = self.pile_list.get(pname)
+        chain = pile.get_chain(card)
+        for card in chain:
+            card.drag_start(event)
 
 
     # testing function

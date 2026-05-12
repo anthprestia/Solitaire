@@ -48,6 +48,12 @@ class Card:
     def get_color(self):
         return self.color
 
+    def get_drag_position(self):
+        return self.drag_position
+
+    def set_drag_position(self, position):
+        self.drag_position = position
+
     def get_pname(self):
         return self.pname
 
@@ -77,15 +83,20 @@ class Card:
             self.board.tag_unbind(self.id, "<ButtonRelease-1>")
             self.draggable = False
 
-    def on_grab(self, event):
+    def drag_start(self, event):
         self.drag_position = {"x":event.x,"y":event.y}
-        self.board.tag_raise(self.id)
+
+    def on_grab(self, event):
+        # ask the board to handle chain grabbing
+        self.gameBoard.card_chain_grabbing(self, event)
 
     def on_drag(self, event):
-        dx = event.x - self.drag_position["x"]
-        dy = event.y - self.drag_position["y"]
-        self.drag_position = {"x":event.x,"y":event.y}
-        self.board.move(self.id, dx,dy)
+        self.gameBoard.card_chain_dragging(self, event)
+
+
+
+
+
 
     def on_drop(self, event):
         # deals with on drop event of card

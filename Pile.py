@@ -54,11 +54,7 @@ class Pile:
         self.board.tag_raise(card.get_id())
         self.resize()
 
-    # grab a chain of piles from card to the top
-    # aka [0.. card.. n] -> [0, card-1] + [card, n]
-    # chainCard is the Card object being grabbed
-    # returns a list of cards
-    def grab(self, chainCard):
+    def get_chain(self, chainCard):
         chain = []
         # Assert pile not empty?
         if len(self.pile) > 0:
@@ -69,12 +65,18 @@ class Pile:
                     found = True
                 if found:
                     chain.append(card)
-                    #self.board.itemconfigure(card.get_id(), state='hidden')
-                else:
-                    base.append(card)
+        return chain
 
-            self.pile = base
-            self.resize()
+    # grab a chain of piles from card to the top
+    # aka [0.. card.. n] -> [0, card-1] + [card, n]
+    # chainCard is the Card object being grabbed
+    # returns a list of cards
+    def split_chain(self, chainCard):
+        chain = self.get_chain(chainCard)
+        base = self.pile[:self.pile.index(chainCard)]
+
+        self.pile = base
+        self.resize()
         return chain
 
     def deal(self, card):
