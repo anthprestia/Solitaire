@@ -62,13 +62,17 @@ class Card:
 
     def update_position(self, x, y):
         self.start_position = {"x":x,"y":y}
+        self.board.itemconfig(self.id, state='normal')
+        self.board.moveto(self.id, x, y)
+        self.board.tag_raise(self.id)
+
+    def reset_position(self):
+        self.board.moveto(self.id, self.start_position['x'], self.start_position['y'])
 
     def deal(self, pname, x, y):
         self.pname = pname
         self.update_position(x,y)
-        self.board.itemconfig(self.id, state='normal')
-        self.board.moveto(self.id, x, y)
-        self.board.tag_raise(self.id)
+
 
     def toggle_drag(self, e=None):
         if not self.draggable:
@@ -93,11 +97,6 @@ class Card:
     def on_drag(self, event):
         self.gameBoard.card_chain_dragging(self, event)
 
-
-
-
-
-
     def on_drop(self, event):
         # deals with on drop event of card
         # ask board if we've dropped over a pile
@@ -112,7 +111,7 @@ class Card:
         # we then reset the position to start_position assuming the board would handle moving piles if needed
 
         isValid = self.gameBoard.is_valid_move(event, self)
-        self.board.moveto(self.id, self.start_position['x'], self.start_position['y'])
+        #self.board.moveto(self.id, self.start_position['x'], self.start_position['y'])
 
         """
         isPile = self.board.is_pile(event)

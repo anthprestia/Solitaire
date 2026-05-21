@@ -105,15 +105,12 @@ class SolitaireBoard:
         #       check with that pile to see if the pile can accept this card validly
         #       if pile can accept
         #           add card to pile
-        #
-
 
         # Pile class for the pile if it exists
         pile = self.is_pile_at(event.x,event.y)
 
         if pile:
             pname = pile.get_name()
-            isValid = False
             # check if the move is valid;
             # only 2 types of piles can accept a valid move
             if 'tableu' in pname:
@@ -125,8 +122,10 @@ class SolitaireBoard:
                 if self.is_valid_foundation_move(pile, card):
                     return True
 
-            #pile.add(card)
-            #self.board.moveto(card.get_id(), event.x, event.y)
+        chain = self.get_card_chain(card)
+        for c in chain:
+            c.reset_position()
+        #reset card positions
         return False
 
     # function for handling tableu drop rules
@@ -188,6 +187,13 @@ class SolitaireBoard:
             return self.pile_list.get(object_list[0])
         else:
             return False
+
+    def get_card_chain(self, card):
+
+        prev_pile = card.get_pname()
+        prev_pile = self.pile_list.get(prev_pile)
+
+        return prev_pile.get_chain(card)
 
     def card_chain_dragging(self, card, event):
         pname = card.get_pname()
