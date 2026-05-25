@@ -1,3 +1,5 @@
+import os
+
 class Config:
     window_width = 1000
     window_height = 900
@@ -9,6 +11,8 @@ class Config:
     card_height = 150
     tableu_window = card_height / 6
     tableu_shift = card_height - tableu_window
+
+    assets = os.getcwd() + "/assets/"
 
     # pile_spacing perhaps
     # available_space = window_width - (7*card_width)

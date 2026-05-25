@@ -1,6 +1,8 @@
 import random
+import tkinter
 from tkinter import *
 from Config import *
+from PIL import Image, ImageTk
 
 
 class Card:
@@ -17,11 +19,28 @@ class Card:
         else:
             self.color = "black"
 
-        self.name = f"{self.rank}_of_{self.suit}"
+        trank = self.rank
+
+        if self.rank == 1:
+            trank = 'A'
+        elif self.rank == 11:
+            trank = 'J'
+        elif self.rank == 12:
+            trank = 'Q'
+        elif self.rank == 13:
+            trank = 'K'
+
+        self.name = f"{trank}_of_{self.suit}"
 
         # create card object and maybe disable the visual until deal
-        self.id = self.board.create_rectangle(0, 0, Config.card_width, Config.card_height,
-                                              fill=self.color, state='hidden', outline='white')
+        #self.id = self.board.create_rectangle(0, 0, Config.card_width, Config.card_height,
+        #                                      fill=self.color, state='hidden', outline='white')
+
+        fname = Config.assets + self.name + '.png'
+        card = Image.open(fname)
+        card = card.resize((Config.card_width, Config.card_height))
+        self.card = ImageTk.PhotoImage(card)
+        self.id = self.board.create_image(0,0, image=self.card, state=HIDDEN)
 
         self.draggable = False
         self.start_position = {"x":0,"y":0}
@@ -128,8 +147,12 @@ class Deck:
         self.board = board
         self.suits = ["hearts", "clubs", "spades", "diamonds"]
         self.ranks = list(range(1,14))
+        #self.ranks = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
 
         self.deck1()
+        #self.deck2()
+
+
         #self.deal()
 
 

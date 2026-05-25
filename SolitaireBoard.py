@@ -82,10 +82,12 @@ class SolitaireBoard:
                     # get the pile by its name
                     pname = 'tableu'+str(t)
                     pile = self.pile_list.get(pname)
-                    # get a card and add it to the pile.
-                    card = cards[dealt]
-                    pile.deal(card)
-                    dealt += 1
+
+                    if dealt < len(cards):
+                        # get a card and add it to the pile.
+                        card = cards[dealt]
+                        pile.deal(card)
+                        dealt += 1
 
 
     def add_card_to_pile(self, card, pile):
@@ -96,16 +98,6 @@ class SolitaireBoard:
     # make sure its valid (isPile) + passes solitaire rules that have not been implemented yet
     # add to pile, observe it grows, then fix card placements
     def is_valid_move(self, event, card):
-
-        # if drop on a pile
-        #   get the name of that pile
-        #   if name NOT tableu or foundation
-        #       return False
-        #   else
-        #       check with that pile to see if the pile can accept this card validly
-        #       if pile can accept
-        #           add card to pile
-
         # Pile class for the pile if it exists
         pile = self.is_pile_at(event.x,event.y)
 
