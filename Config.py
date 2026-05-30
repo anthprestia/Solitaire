@@ -1,6 +1,7 @@
 import os
 
 class Config:
+    theme = 'red'
     window_width = 1000
     window_height = 900
 
@@ -9,8 +10,11 @@ class Config:
 
     card_width = 100
     card_height = 150
-    tableu_window = card_height / 6
+    tableu_window = card_height / 5
     tableu_shift = card_height - tableu_window
+
+    waste_window = card_width / 4
+    waste_shift = card_width - waste_window
 
     assets = os.getcwd() + "/assets/"
 

@@ -30,8 +30,14 @@ class Pile:
     def get_name(self):
         return self.name
 
+    def get_coords(self):
+        return {'x':self.w_offset, 'y':self.h_offset}
+
     def size(self):
         return len(self.pile)
+
+    def isEmpty(self):
+        return len(self.pile) == 0
 
     def top(self):
         # Assert pile not empty?
@@ -40,19 +46,32 @@ class Pile:
         else:
             return None
 
+    def pop(self):
+        card = self.pile.pop()
+        self.resize()
+        return card
+
+    def get_cards(self):
+        return self.pile
+
     # add an element to the
     def add(self, card):
         self.pile.append(card)
         card.set_pname(self.name)
 
-        spos_x = self.w_offset
-        spos_y = self.h_offset + ((len(self.pile)-1) * self.window)
-        card.update_position(spos_x, spos_y)
+        # set to vertical/horizontal pile addition logic
 
-        self.board.moveto(card.get_id(), spos_x, spos_y)
-        self.board.itemconfigure(card.get_id(), state='normal')
-        self.board.tag_raise(card.get_id())
+        spos_x = self.w_offset
+        spos_y = self.h_offset
+        if 'tableu' in self.name:
+            spos_y = self.h_offset + ((len(self.pile)-1) * self.window)
+
+        card.update_position(spos_x, spos_y)
         self.resize()
+
+    def add_chain(self, chain):
+        for card in chain:
+            self.add(card)
 
     def get_chain(self, chainCard):
         chain = []
@@ -77,11 +96,25 @@ class Pile:
 
         self.pile = base
         self.resize()
+
+        # check the end of the base and if its not flipped, then we flip and toggle drag
+        if len(self.pile) > 0:
+            top = self.pile[-1]
+
+            if (not top.is_draggable()) and ('tableu' in self.name):
+                top.flip()
+                top.toggle_drag()
+
         return chain
 
     def deal(self, card):
         self.pile.append(card)
-        card.deal(self.name, self.w_offset, self.h_offset + ((len(self.pile)-1) * self.window))
+        if 'tableu' in self.name:
+            h_offset = self.h_offset + ((len(self.pile)-1) * self.window)
+        else:
+            h_offset = self.h_offset
+
+        card.deal(self.name, self.w_offset, h_offset)
         self.resize()
 
     # update the UI element for pile to expand to exist under every laid card
@@ -89,12 +122,13 @@ class Pile:
         # if pile size == 0 or 1 then card size
         # upper left will be (w_offset, h_offset)
         # bottom right will be (w_offset + card_width, h_offset + card_window*size)
-        size = len(self.pile)
 
-        if size < 2:
-            self.board.coords(self.id, self.w_offset, self.h_offset, self.w_offset + self.width, self.h_offset + self.height)
-        else:
-            self.board.coords(self.id, self.w_offset, self.h_offset, self.w_offset + self.width, self.h_offset + self.height + (self.window*(size-1)))
+        if 'tableu' in self.name:
+            size = len(self.pile)
+            if size < 2:
+                self.board.coords(self.id, self.w_offset, self.h_offset, self.w_offset + self.width, self.h_offset + self.height)
+            else:
+                self.board.coords(self.id, self.w_offset, self.h_offset, self.w_offset + self.width, self.h_offset + self.height + (self.window*(size-1)))
 
 
     # get top left coordinate position of the pile

@@ -15,13 +15,17 @@ class SolitaireBoard:
         self.board.pack(expand=True, fill="both")
         self.board.update()
 
-        self.board.bind('<1>', self.under)
+        #self.board.bind('<1>', self.under)
 
         # dict of piles on the board KEY = Canvas ObjectId or Pile Name
         self.pile_list = {}
 
         self.configureGameBoard()
         self.deal_game()
+
+
+        sid = self.pile_list.get('stock').get_id()
+        self.board.tag_bind(sid, '<ButtonRelease-1>', self.stock_draw)
         #self.deck = Deck(self)
 
 
@@ -29,6 +33,7 @@ class SolitaireBoard:
     def get_board(self):
         return self.board
 
+    # build game board with no cards
     def configureGameBoard(self):
         # Build the game board
 
@@ -86,12 +91,18 @@ class SolitaireBoard:
                     if dealt < len(cards):
                         # get a card and add it to the pile.
                         card = cards[dealt]
+                        # if this the last card in the pile we flip it to be readable
+                        if t == d:
+                            card.flip()
+                            card.toggle_drag()
                         pile.deal(card)
                         dealt += 1
 
+        # use dealt as an index to split cards and then populate the stock.
+        stock = self.pile_list.get('stock')
 
-    def add_card_to_pile(self, card, pile):
-        return
+        for card in cards[dealt:]:
+            stock.deal(card)
 
 
     # function that is called from within a Card to ask the board to handle a card drop event
@@ -112,6 +123,7 @@ class SolitaireBoard:
                     return True
             elif 'foundation' in pname:
                 if self.is_valid_foundation_move(pile, card):
+                    self.valid_foundation_move(pile, card)
                     return True
 
         chain = self.get_card_chain(card)
@@ -124,13 +136,21 @@ class SolitaireBoard:
     # returns boolean
     def is_valid_tableu_move(self, pile, card):
         # check the top card of the pile
+        crank = card.get_rank()
         top = pile.top()
         # if the card is the opposite color as the top
         #   return True
         if top:
             isColor = top.get_color() != card.get_color()
+            # color is correct now we must check rank.
             if isColor:
-                return True
+                # rank must be one value higher.
+                trank = top.get_rank()
+                if (crank + 1) == trank:
+                    return True
+        # if king, it can be dropped on an open tableu
+        elif crank == 13:
+            return True
 
         return False
 
@@ -147,26 +167,55 @@ class SolitaireBoard:
         # chain = [card, .. , bottom of chain]
         chain = prev_pile.split_chain(card)
 
+        # if the card comes from the waste then we make top card draggable
+        if 'waste' in prev_pname:
+            top = prev_pile.top()
+            if top is not None:
+                top.toggle_drag()
+
         for c in chain:
             pile.add(c)
 
         return True
 
-
     # function for handling foundation moves
     # returns boolean
     def is_valid_foundation_move(self, pile, card):
-        # check the top card of the pile
-        top = pile.top()
-        # if the card is the same color as the top then
-        # return True
-
-        if top:
-            isColor = top.get_color() == card.get_color()
-            if isColor:
-                return True
+        # card must NOT be a chain!!
+        chain = self.get_card_chain(card)
+        if len(chain) == 1:
+            # check the top card of the pile
+            top = pile.top()
+            if top:
+                isColor = top.get_suit() == card.get_suit()
+                if isColor:
+                    return True
+            else:
+                #if the pile is empty it can only accept an Ace
+                if card.get_rank() == 1:
+                    return True
 
         return False
+
+    def valid_foundation_move(self, pile, card):
+
+        prev_pname = card.get_pname()
+        # remove card from the old pile
+        prev_pile = self.pile_list.get(prev_pname)
+        # we've already established this has to be a chain of 1
+        pcard = prev_pile.split_chain(card)[0]
+
+        # if the card comes from the waste then we make top card draggable
+        if 'waste' in prev_pname:
+            top = prev_pile.top()
+            if top is not None:
+                top.toggle_drag()
+
+        #sanity check lol
+        if pcard != card:
+            raise
+        # add card to new pile
+        pile.add(card)
 
     # determines if an event happened over a pile
     # if True, return the Pile
@@ -201,15 +250,70 @@ class SolitaireBoard:
             self.board.tag_raise(cid)
 
 
-        # board needs to update the cards at their new positions starting with 0
-        # and offset with window on the y
+    def stock_draw(self, event=None):
+        # pop (up to) top 3 cards from the pile and put them into a list
+        stock = self.pile_list.get('stock')
+        waste = self.pile_list.get('waste')
+        w_coord = waste.get_coords()
 
-    def card_chain_grabbing(self, card, event):
-        pname = card.get_pname()
-        pile = self.pile_list.get(pname)
-        chain = pile.get_chain(card)
-        for card in chain:
-            card.drag_start(event)
+
+        # prep the waste for the new draw
+        w_cards = waste.get_cards()
+        w_len = len(w_cards)
+
+        #if click on em empty stock try repopulating with the waste.
+        if stock.isEmpty():
+            if w_len > 0:
+                # grab the cards from waste pile
+                w_cards = waste.split_chain(w_cards[0])
+                for card in reversed(w_cards):
+                    card.flip()
+                    stock.add(card)
+                    if card.is_draggable():
+                        card.toggle_drag()
+        else:
+            if w_len > 2:
+                c1 = w_cards[w_len - 2]
+                c2 = w_cards[w_len - 1]
+                c1.update_position(w_coord['x'], w_coord['y'])
+                c2.update_position(w_coord['x'], w_coord['y'])
+                if c1.is_draggable():
+                    c1.toggle_drag()
+                if c2.is_draggable():
+                    c2.toggle_drag()
+
+            draw = []
+            for i in [1,2,3]:
+                if not stock.isEmpty():
+                    card = stock.pop()
+                    card.flip()
+                    draw.append(card)
+
+            # now toggle only the top card to be draggable
+            dlen = len(draw)
+            if dlen >= 1:
+                for i in range(0, dlen):
+                    card = draw[i]
+                    card = draw[i]
+                    if i == dlen - 1:
+                        card.toggle_drag()
+                    waste.add(card)
+                    x_offset = w_coord["x"] + (i * Config.waste_window)
+                    card.update_position(x_offset, w_coord["y"])
+
+
+    def card_grab(self, card, event):
+        # click event for cards
+
+        # if stock pile then draw cards and put them in the waste
+        if 'stock' in card.get_pname():
+           self.stock_draw()
+        else:
+            pname = card.get_pname()
+            pile = self.pile_list.get(pname)
+            chain = pile.get_chain(card)
+            for card in chain:
+                card.chain_drag_start(event)
 
 
     # testing function

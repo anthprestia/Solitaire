@@ -39,21 +39,27 @@ class Card:
         fname = Config.assets + self.name + '.png'
         card = Image.open(fname)
         card = card.resize((Config.card_width, Config.card_height))
-        self.card = ImageTk.PhotoImage(card)
-        self.id = self.board.create_image(0,0, image=self.card, state=HIDDEN)
 
+        fname = Config.assets + Config.theme + '.png'
+        cback = Image.open(fname)
+        cback = cback.resize((Config.card_width, Config.card_height))
+
+        self.card = ImageTk.PhotoImage(card)
+        self.cback = ImageTk.PhotoImage(cback)
+        # indicates which side of the card is showing front/T; back/F
+        self.front = False
+
+
+        #draggable corresponds to side of card being shown..?
+        self.id = self.board.create_image(0,0, image=self.cback, state=HIDDEN)
         self.draggable = False
         self.start_position = {"x":0,"y":0}
         self.drag_position = {"x":0,"y":0}
 
-        self.toggle_drag()
+        self.board.tag_bind(self.id, "<ButtonRelease-1>", self.on_grab)
+        #self.board.tag_bind(self.id, "<Button-1>", self.on_grab)
 
-    # Overwrite print function to show Suit/Rank
-    def __str__(self):
-        return self.name
-
-    def __eq__(self, other):
-        return self.name == other.name
+        #self.toggle_drag()
 
     def get_id(self):
         return self.id
@@ -64,8 +70,14 @@ class Card:
     def get_rank(self):
         return self.rank
 
+    def get_suit(self):
+        return self.suit
+
     def get_color(self):
         return self.color
+
+    def is_draggable(self):
+        return self.draggable
 
     def get_drag_position(self):
         return self.drag_position
@@ -78,6 +90,16 @@ class Card:
 
     def set_pname(self, pname):
         self.pname = pname
+
+    def flip(self):
+        if self.front:
+            self.board.itemconfig(self.id, image=self.cback)
+            self.front = False
+            #self.toggle_drag()
+        else:
+            self.board.itemconfig(self.id, image=self.card)
+            self.front = True
+            #self.toggle_drag()
 
     def update_position(self, x, y):
         self.start_position = {"x":x,"y":y}
@@ -92,7 +114,6 @@ class Card:
         self.pname = pname
         self.update_position(x,y)
 
-
     def toggle_drag(self, e=None):
         if not self.draggable:
             # establish events for grab and drag
@@ -101,45 +122,30 @@ class Card:
             self.board.tag_bind(self.id, "<ButtonRelease-1>", self.on_drop)
             self.draggable = True
         else:
-            self.board.tag_unbind(self.id, "<Button-1>")
+            #self.board.tag_unbind(self.id, "<Button-1>")
             self.board.tag_unbind(self.id, "<B1-Motion>")
             self.board.tag_unbind(self.id, "<ButtonRelease-1>")
             self.draggable = False
 
-    def drag_start(self, event):
-        self.drag_position = {"x":event.x,"y":event.y}
-
     def on_grab(self, event):
         # ask the board to handle chain grabbing
-        self.gameBoard.card_chain_grabbing(self, event)
+        self.gameBoard.card_grab(self, event)
 
     def on_drag(self, event):
         self.gameBoard.card_chain_dragging(self, event)
 
     def on_drop(self, event):
-        # deals with on drop event of card
-        # ask board if we've dropped over a pile
-
-        # When I drop a card check with the board if it is a valid move
-        #   If it is NOT a valid move
-        #       reset start position
-        #   If it IS a valid move
-        #       move to new coordinate and update start_position
-        # ---------- IDEA 2 -----------
-        # ask the board if its a valid move, pass in the event and this card
-        # we then reset the position to start_position assuming the board would handle moving piles if needed
-
         isValid = self.gameBoard.is_valid_move(event, self)
-        #self.board.moveto(self.id, self.start_position['x'], self.start_position['y'])
 
-        """
-        isPile = self.board.is_pile(event)
-        if isPile:
-            isPile = isPile.get_coordinate()
-            self.start_position = {"x":isPile[0],"y":isPile[1]}
-        self.board.moveto(self.id, self.start_position['x'], self.start_position['y'])
-        """
+    def chain_drag_start(self, event):
+        self.drag_position = {"x":event.x,"y":event.y}
 
+    # Overwrite print function to show Suit/Rank
+    def __str__(self):
+        return self.name
+
+    def __eq__(self, other):
+        return self.name == other.name
 
 class Deck:
     def __init__(self, board):
@@ -153,18 +159,18 @@ class Deck:
         #self.deck2()
 
 
-        #self.deal()
-
-
     def deck2(self):
         self.deck.append(Card(self.board, self.suits[0], self.ranks[0]))
-        self.deck.append(Card(self.board, self.suits[1], self.ranks[1]))
+        self.deck.append(Card(self.board, self.suits[0], self.ranks[1]))
+        self.deck.append(Card(self.board, self.suits[0], self.ranks[2]))
+        self.deck.append(Card(self.board, self.suits[0], self.ranks[3]))
+        self.deck.append(Card(self.board, self.suits[0], self.ranks[-1]))
 
     def deck1(self):
         for suit in self.suits:
             for rank in self.ranks:
                 self.deck.append(Card(self.board, suit, rank))
-        self.shuffle_deck()
+        #self.shuffle_deck()
 
     def deckT(self):
         self.deck.append(Card(self.board, self.suits[0], self.ranks[0]))
