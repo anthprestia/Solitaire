@@ -195,7 +195,8 @@ class SolitaireBoard:
         if 'waste' in prev_pname:
             top = prev_pile.top()
             if top is not None:
-                top.toggle_drag()
+                if not top.is_draggable():
+                    top.toggle_drag()
 
         for c in chain:
             pile.add(c)
@@ -211,9 +212,9 @@ class SolitaireBoard:
             # check the top card of the pile
             top = pile.top()
             if top:
-                isColor = top.get_suit() == card.get_suit()
-                if isColor:
-                    return True
+                if top.get_suit() == card.get_suit():
+                    if (top.get_rank() + 1) == card.get_rank():
+                        return True
             else:
                 #if the pile is empty it can only accept an Ace
                 if card.get_rank() == 1:
@@ -233,7 +234,8 @@ class SolitaireBoard:
         if 'waste' in prev_pname:
             top = prev_pile.top()
             if top is not None:
-                top.toggle_drag()
+                if not top.is_draggable():
+                    top.toggle_drag()
 
         #sanity check lol
         if pcard != card:
