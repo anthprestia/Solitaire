@@ -10,6 +10,9 @@ class SolitaireBoard:
     def __init__(self, gameframe):
         self.gameframe = gameframe
         # We want to work within a Frame for easier use
+        self.options_bar = Frame(self.gameframe)
+        self.options_bar.pack()
+
         self.board = Canvas(self.gameframe, name='solitaire', bg='green')
         # expand to the size of the window.. **might need to change to accomodate dynamic sizing
         self.board.pack(expand=True, fill="both")
@@ -20,6 +23,7 @@ class SolitaireBoard:
         # dict of piles on the board KEY = Canvas ObjectId or Pile Name
         self.pile_list = {}
 
+        self.configureOptionsBar()
         self.configureGameBoard()
         self.deal_game()
 
@@ -32,6 +36,15 @@ class SolitaireBoard:
 
     def get_board(self):
         return self.board
+
+    def configureOptionsBar(self):
+        # put in the New Game & Restart buttons
+        self.new_button = tk.Button(self.options_bar, text='New Game', command=self.new_game)
+        self.reset_button = tk.Button(self.options_bar, text='Reset Board', command=self.reset_board)
+
+        self.new_button.pack(side='left', fill='both', expand=True)
+        self.reset_button.pack(side='left', fill='both', expand=True)
+
 
     # build game board with no cards
     def configureGameBoard(self):
@@ -104,6 +117,17 @@ class SolitaireBoard:
         for card in cards[dealt:]:
             stock.deal(card)
 
+    def reset_board(self):
+        piles = set(self.pile_list.values())
+
+        for pile in piles:
+            while not pile.isEmpty():
+                card = pile.pop()
+                self.board.delete(card.get_id())
+
+    def new_game(self):
+        self.reset_board()
+        self.deal_game()
 
     # function that is called from within a Card to ask the board to handle a card drop event
     # make sure its valid (isPile) + passes solitaire rules that have not been implemented yet
