@@ -17,7 +17,10 @@ class Pile:
         # Create rectangle element on the screen and store its
         self.id = self.board.create_rectangle(self.w_offset, self.h_offset,
                                               self.w_offset + self.width, self.h_offset + self.height,
-                                              fill='grey')
+                                              fill='grey', width=4, outline='green')
+
+        # have one rectangle that expands and is able to be trackeed aka id
+        # and have one rectangle that is purely cosmetic that displays the tile
 
         # Stack of cards
         self.pile = []
@@ -125,6 +128,11 @@ class Pile:
 
         if 'tableu' in self.name:
             size = len(self.pile)
+            if size <= 1:
+                self.board.itemconfig(self.id, fill='grey')
+            else:
+                self.board.itemconfig(self.id, fill='green')
+
             if size < 2:
                 self.board.coords(self.id, self.w_offset, self.h_offset, self.w_offset + self.width, self.h_offset + self.height)
             else:
