@@ -1,4 +1,4 @@
-from tkinter import *
+import tkinter as tk
 from Card import *
 from Pile import *
 from Util import *
@@ -18,38 +18,29 @@ class SolitaireBoard:
         self.board.pack(expand=True, fill="both")
         self.board.update()
 
-        #self.board.bind('<1>', self.under)
-
         # dict of piles on the board KEY = Canvas ObjectId or Pile Name
         self.pile_list = {}
 
         self.configureOptionsBar()
         self.configureGameBoard()
+        self.winner = None
         self.deal_game()
-
 
         sid = self.pile_list.get('stock').get_id()
         self.board.tag_bind(sid, '<ButtonRelease-1>', self.stock_draw)
         #self.deck = Deck(self)
 
-
-
-    def get_board(self):
-        return self.board
-
     def configureOptionsBar(self):
         # put in the New Game & Restart buttons
         self.new_button = tk.Button(self.options_bar, text='New Game', command=self.new_game)
-        self.reset_button = tk.Button(self.options_bar, text='Reset Board', command=self.reset_board)
+        self.reset_button = tk.Button(self.options_bar, text='Fix Win', command=self.fix_win)
 
         self.new_button.pack(side='left', fill='both', expand=True)
         self.reset_button.pack(side='left', fill='both', expand=True)
 
-
     # build game board with no cards
     def configureGameBoard(self):
         # Build the game board
-
         # top row
         stock_x = Config.outer_padding
         stock_y = Config.outer_padding
@@ -85,10 +76,10 @@ class SolitaireBoard:
 
     # Deal the deck of cards
     def deal_game(self):
-
         d = Deck(self)
         d.shuffle_deck()
         cards = d.get_cards()
+        self.winner = None
 
         dealt = 0
         # d = card depth (1 for first card, 2 for 2nd card, etc)
@@ -120,6 +111,10 @@ class SolitaireBoard:
     def reset_board(self):
         piles = set(self.pile_list.values())
 
+        if self.winner:
+            #destroy win screen
+            self.board.delete(self.winner)
+            self.winner = None
         for pile in piles:
             while not pile.isEmpty():
                 card = pile.pop()
@@ -128,6 +123,20 @@ class SolitaireBoard:
     def new_game(self):
         self.reset_board()
         self.deal_game()
+
+    def check_win(self):
+        winner = True
+        for i in [1,2,3,4]:
+            foundation = self.pile_list.get('foundation-'+str(i))
+            top = foundation.top()
+            if top:
+                if top.get_rank() != 13:
+                    winner = False
+
+        if winner:
+            self.winner = self.board.create_text(Config.window_width/2, Config.window_height/2, text='WINNER!', font=('Helvetica',36))
+
+
 
     # function that is called from within a Card to ask the board to handle a card drop event
     # make sure its valid (isPile) + passes solitaire rules that have not been implemented yet
@@ -148,6 +157,7 @@ class SolitaireBoard:
             elif 'foundation' in pname:
                 if self.is_valid_foundation_move(pile, card):
                     self.valid_foundation_move(pile, card)
+                    self.check_win()
                     return True
 
         chain = self.get_card_chain(card)
@@ -255,6 +265,9 @@ class SolitaireBoard:
         else:
             return False
 
+    def get_board(self):
+        return self.board
+
     def get_card_chain(self, card):
 
         prev_pile = card.get_pname()
@@ -274,7 +287,6 @@ class SolitaireBoard:
             card.set_drag_position({"x": event.x, "y": event.y})
             self.board.move(cid, dx, dy)
             self.board.tag_raise(cid)
-
 
     def stock_draw(self, event=None):
         # pop (up to) top 3 cards from the pile and put them into a list
@@ -298,7 +310,7 @@ class SolitaireBoard:
                     if card.is_draggable():
                         card.toggle_drag()
         else:
-            if w_len > 2:
+            if w_len >= 2:
                 c1 = w_cards[w_len - 2]
                 c2 = w_cards[w_len - 1]
                 c1.update_position(w_coord['x'], w_coord['y'])
@@ -327,7 +339,6 @@ class SolitaireBoard:
                     x_offset = w_coord["x"] + (i * Config.waste_window)
                     card.update_position(x_offset, w_coord["y"])
 
-
     def card_grab(self, card, event):
         # click event for cards
 
@@ -340,7 +351,6 @@ class SolitaireBoard:
             chain = pile.get_chain(card)
             for card in chain:
                 card.chain_drag_start(event)
-
 
     # testing function
     def under(self, event):
@@ -355,3 +365,31 @@ class SolitaireBoard:
             print(self.pile_list.get(object_list[0]).get_name())
         else:
             print("NO PILE")
+
+    # testing function to fix the game to be one move from winning
+    def fix_win(self):
+
+        self.reset_board()
+
+        d = Deck(self)
+        cards = d.get_cards()
+
+        card_idx = 0
+        for i in range(1,5):
+            foundation = self.pile_list.get('foundation-'+str(i))
+            for j in range(1, 14):
+                card = cards[card_idx]
+
+                # is card flipped and draggable? if not then we make it so
+                if not card.is_draggable():
+                    card.toggle_drag()
+
+                if card.is_flipped():
+                    card.flip()
+
+                if i == 4 and j == 13:
+                    #place the last card onto the first tableu
+                    self.pile_list.get('tableu1').add(card)
+                else:
+                    foundation.add(card)
+                card_idx += 1

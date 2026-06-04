@@ -91,6 +91,9 @@ class Card:
     def set_pname(self, pname):
         self.pname = pname
 
+    def is_flipped(self):
+        return not self.front
+
     def flip(self):
         if self.front:
             self.board.itemconfig(self.id, image=self.cback)

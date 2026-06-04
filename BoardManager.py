@@ -17,3 +17,7 @@ class BoardManager:
 
         # board created
         self.board = SolitaireBoard(self.gameframe)
+
+        #-- way to take out or change board.
+        #for board in self.gameframe.winfo_children():
+        #    board.destroy()
